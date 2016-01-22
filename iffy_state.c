@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "state.h"
+#include "iffy.h"
 
 // glui8 iffy_state_init( iffy_state_t *target )
 glui8 iffy_state_init( void )

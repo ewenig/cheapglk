@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <glib.h>
-#include "config.h"
+#include "iffy.h"
 
 /* Mostly a wrapper around getopt() */
 glui8 iffy_args_parse( iffy_args_t *target, int argc, char **argv )

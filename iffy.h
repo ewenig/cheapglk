@@ -1,6 +1,9 @@
 #ifndef IFFY_H
 #define IFFY_H
+
 #include <glib.h>
+#include "glk.h"
+
 #define malloc( N ) calloc( 1, N )
 #define iffy_err( N ) fputs( "ERROR: " N "\n", stderr )
 #define iffy_errf( N, M ) fprintf( stderr, "ERROR: " N "\n", M )
@@ -50,8 +53,8 @@ typedef struct
 
 iffy_state_t *state;
 
-#include "callbacks.h"
-#include "state.h"
-#include "config.h"
+#include "iffy_callbacks.h"
+#include "iffy_state.h"
+#include "iffy_config.h"
 
 #endif
