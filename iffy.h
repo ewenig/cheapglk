@@ -22,6 +22,22 @@ typedef struct
     char *pass;
     char *channel;
     char *realName;
-} iffy_options_t;
+} iffy_state_options_t;
+
+typedef struct
+{
+    char *dataFile;
+    char *transcriptFile;
+    char *cmdRecordFile;
+    char *savedGameFile;
+} iffy_state_files_t;
+
+typedef struct
+{
+    iffy_state_files_t *files;
+    iffy_state_options_t *opts;
+} iffy_state_t;
+
+iffy_state_t *state;
 
 #endif

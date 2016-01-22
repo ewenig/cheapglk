@@ -50,7 +50,7 @@ glui8 iffy_config_open( GKeyFile *target, const char *file )
     return 0; // success
 }
 
-glui8 iffy_config_parse( iffy_options_t *target, GKeyFile *handle )
+glui8 iffy_config_parse( iffy_state_options_t *target, GKeyFile *handle )
 {
     GError *error;
 

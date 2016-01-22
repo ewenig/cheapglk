@@ -23,6 +23,14 @@ int main( int argc, char *argv[] )
 {
     glui8 res; // for testing the result of various functions
 
+    // initialize program state - declared in iffy.h
+    res = iffy_state_init( state );
+    if ( res != 0 )
+    {
+        iffy_err( "ERROR: Couldn't initialize state" );
+        return res;
+    }
+
     // Parse the command line arguments.
     iffy_args_t args;
     res = iffy_args_parse( &args, argc, argv );
@@ -41,8 +49,7 @@ int main( int argc, char *argv[] )
     }
 
     // Parse the configuration file.
-    iffy_options_t options;
-    res = iffy_config_parse( &options, optionsFile );
+    res = iffy_config_parse( state->opts, optionsFile );
     if ( res != 0 )
     {
         iffy_err( "ERROR: Couldn't parse options file" );
@@ -51,7 +58,7 @@ int main( int argc, char *argv[] )
 
     // Set up the callbacks and IRC session.
     irc_callbacks_t callbacks;
-    iffy_callbacks_init( &callbacks, &options );
+    iffy_callbacks_init( &callbacks, state->opts );
 
     irc_session_t *session = irc_create_session( &callbacks );
     if ( !session )
@@ -63,7 +70,8 @@ int main( int argc, char *argv[] )
     // Set up libircclient session options XXX
 
     // Connect to the IRC server.
-    res = irc_connect( session, options.server, options.port, 0, options.nick, options.username, options.realName );
+    res = irc_connect( session, state->opts->server, state->opts->port, 0, state->opts->nick,
+                       state->opts->username, state->opts->realName );
     if ( res != 0 )
     {
         iffy_err( "ERROR: Couldn't connect to the IRC network" );
@@ -72,6 +80,10 @@ int main( int argc, char *argv[] )
 
     // Initialize some internal data structures.
     gli_initialize_misc( );
+
+
+    // Call the event loop.
+    irc_run( session );
 
     // Call the GLK process.
     glk_main( );

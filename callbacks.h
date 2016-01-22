@@ -5,6 +5,6 @@
 #include "libirc_rfcnumeric.h"
 #include "iffy.h"
 
-glui8 iffy_callbacks_init( irc_callbacks_t *target, iffy_options_t *options );
+glui8 iffy_callbacks_init( irc_callbacks_t *target, iffy_state_options_t *options );
 
 #endif
