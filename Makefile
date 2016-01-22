@@ -17,8 +17,8 @@ CC = cc
 
 OPTIONS = -g -Wall
 
-CFLAGS = $(OPTIONS) $(INCLUDEDIRS) -I/usr/local/include
-LDFLAGS = -lircclient -lcrypto -lssl
+CFLAGS = $(OPTIONS) $(INCLUDEDIRS) -I/usr/local/include -I/usr/local/include/glib-2.0 -I/usr/local/lib/glib-2.0/include
+LDFLAGS = -lircclient -lcrypto -lssl -lglib
 
 GLKLIB = libcheapglk.a
 
