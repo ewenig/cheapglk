@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <glib.h>
 #include "libircclient.h"
 #include "libirc_rfcnumeric.h"
 #include "glk.h"
 #include "cheapglk.h"
 #include "glkstart.h"
 #include "iffy.h"
+#include "callbacks.h"
+#include "config.h"
 
 int gli_screenwidth = 80;
 int gli_screenheight = 24;
@@ -25,16 +28,15 @@ int main( int argc, char *argv[] )
     res = iffy_args_parse( &args, argc, argv );
     if ( res != 0 )
     {
-        fputs( stderr, "ERROR: Couldn't parse command line arguments" );
         return res;
     }
 
     // Read in the configuration file.
-    FILE *optionsFile;
+    GKeyFile *optionsFile = NULL;
     res = iffy_config_open( optionsFile, args.configFile );
     if ( res != 0 )
     {
-        fputs( stderr, "ERROR: Couldn't open options file" );
+        iffy_err( "ERROR: Couldn't open options file" );
         return res;
     }
 
@@ -43,7 +45,7 @@ int main( int argc, char *argv[] )
     res = iffy_config_parse( &options, optionsFile );
     if ( res != 0 )
     {
-        fputs( stderr, "ERROR: Couldn't parse options file" );
+        iffy_err( "ERROR: Couldn't parse options file" );
         return res;
     }
 
@@ -54,7 +56,7 @@ int main( int argc, char *argv[] )
     irc_session_t *session = irc_create_session( &callbacks );
     if ( !session )
     {
-        fputs( stderr, "ERROR: Couldn't create IRC session" );
+        iffy_err( "ERROR: Couldn't create IRC session" );
         return 1;
     }
 
@@ -64,7 +66,7 @@ int main( int argc, char *argv[] )
     res = irc_connect( session, options.server, options.port, 0, options.nick, options.username, options.realName );
     if ( res != 0 )
     {
-        fputs( stderr, "ERROR: Couldn't connect to the IRC network" );
+        iffy_err( "ERROR: Couldn't connect to the IRC network" );
         return res;
     }
 

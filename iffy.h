@@ -1,6 +1,12 @@
 #ifndef IFFY_H
 #define IFFY_H
 
+#define malloc( N ) calloc( 1, N )
+#define iffy_err( N ) fputs( "ERROR: " N, stderr )
+#define iffy_errf( N, M ) fprintf( stderr, N, M )
+
+#define IFFY_GROUP_NAME "iffy"
+
 typedef struct
 {
     char *configFile;
