@@ -17,8 +17,8 @@ void (*gli_unregister_arr)(void *array, glui32 len, char *typecode,
 
 void gli_initialize_misc()
 {
-    int ix;
-    int res;
+    glui8 ix;
+    glui8 res;
     
     /* Initialize the to-uppercase and to-lowercase tables. These should
         *not* be localized to a platform-native character set! They are

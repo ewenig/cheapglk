@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include "libircclient.h"
+#include "libirc_rfcnumeric.h"
 #include "glk.h"
 #include "cheapglk.h"
 #include "glkstart.h"
+#include "iffy.h"
 
 int gli_screenwidth = 80;
 int gli_screenheight = 24; 
@@ -12,199 +16,56 @@ int gli_utf8input = FALSE;
 
 static int inittime = FALSE;
 
-int main(int argc, char *argv[])
-{
-    int ix, jx, val;
-    int display_version = TRUE;
+int main(int argc, char *argv[]) {
+    glui8 res; // for testing the result of various functions
 
-    int errflag = FALSE;
-    glkunix_startup_t startdata;
-    
-    /* Test for compile-time errors. If one of these spouts off, you
-        must edit glk.h and recompile. */
-    if (sizeof(glui32) != 4) {
-        printf("Compile-time error: glui32 is not a 32-bit value. Please fix glk.h.\n");
-        return 1;
-    }
-    if ((glui32)(-1) < 0) {
-        printf("Compile-time error: glui32 is not unsigned. Please fix glk.h.\n");
-        return 1;
-    }
-    
-    /* Now some argument-parsing. This is probably going to hurt. */
-    startdata.argc = 0;
-    startdata.argv = (char **)malloc(argc * sizeof(char *));
-    
-    /* Copy in the program name. */
-    startdata.argv[startdata.argc] = argv[0];
-    startdata.argc++;
-    
-    for (ix=1; ix<argc && !errflag; ix++) {
-        glkunix_argumentlist_t *argform;
-        int inarglist = FALSE;
-        char *cx;
-        
-        for (argform = glkunix_arguments; 
-            argform->argtype != glkunix_arg_End && !errflag; 
-            argform++) {
-            
-            if (argform->name[0] == '\0') {
-                if (argv[ix][0] != '-') {
-                    startdata.argv[startdata.argc] = argv[ix];
-                    startdata.argc++;
-                    inarglist = TRUE;
-                }
-            }
-            else if ((argform->argtype == glkunix_arg_NumberValue)
-                && !strncmp(argv[ix], argform->name, strlen(argform->name))
-                && (cx = argv[ix] + strlen(argform->name))
-                && (atoi(cx) != 0 || cx[0] == '0')) {
-                startdata.argv[startdata.argc] = argv[ix];
-                startdata.argc++;
-                inarglist = TRUE;
-            }
-            else if (!strcmp(argv[ix], argform->name)) {
-                int numeat = 0;
-                
-                if (argform->argtype == glkunix_arg_ValueFollows) {
-                    if (ix+1 >= argc) {
-                        printf("%s: %s must be followed by a value\n\n", 
-                            argv[0], argform->name);
-                        errflag = TRUE;
-                        break;
-                    }
-                    numeat = 2;
-                }
-                else if (argform->argtype == glkunix_arg_NoValue) {
-                    numeat = 1;
-                }
-                else if (argform->argtype == glkunix_arg_ValueCanFollow) {
-                    if (ix+1 < argc && argv[ix+1][0] != '-') {
-                        numeat = 2;
-                    }
-                    else {
-                        numeat = 1;
-                    }
-                }
-                else if (argform->argtype == glkunix_arg_NumberValue) {
-                    if (ix+1 >= argc
-                        || (atoi(argv[ix+1]) == 0 && argv[ix+1][0] != '0')) {
-                        printf("%s: %s must be followed by a number\n\n", 
-                            argv[0], argform->name);
-                        errflag = TRUE;
-                        break;
-                    }
-                    numeat = 2;
-                }
-                else {
-                    errflag = TRUE;
-                    break;
-                }
-                
-                for (jx=0; jx<numeat; jx++) {
-                    startdata.argv[startdata.argc] = argv[ix];
-                    startdata.argc++;
-                    if (jx+1 < numeat)
-                        ix++;
-                }
-                inarglist = TRUE;
-                break;
-            }
-        }
-        if (inarglist || errflag)
-            continue;
-            
-        if (argv[ix][0] == '-') {
-            switch (argv[ix][1]) {
-                case 'w':
-                    val = 0;
-                    if (argv[ix][2]) 
-                        val = atoi(argv[ix]+2);
-                    else {
-                        ix++;
-                        if (ix<argc) 
-                            val = atoi(argv[ix]);
-                    }
-                    if (val < 8)
-                        errflag = TRUE;
-                    else
-                        gli_screenwidth = val;
-                    break;
-                case 'h':
-                    val = 0;
-                    if (argv[ix][2]) 
-                        val = atoi(argv[ix]+2);
-                    else {
-                        ix++;
-                        if (ix<argc) 
-                            val = atoi(argv[ix]);
-                    }
-                    if (val < 2)
-                        errflag = TRUE;
-                    else
-                        gli_screenheight = val;
-                    break;
-                case 'u':
-                    if (argv[ix][2]) {
-                        if (argv[ix][2] == 'i') 
-                            gli_utf8input = TRUE;
-                        else if (argv[ix][2] == 'o')
-                            gli_utf8output = TRUE;
-                        else
-                            errflag = TRUE;
-                    }
-                    else {
-                        gli_utf8output = TRUE;
-                        gli_utf8input = TRUE;
-                    }
-                    break;
-                case 'q':
-                    display_version = FALSE;
-                    break;
-                default:
-                    printf("%s: unknown option: %s\n\n", argv[0], argv[ix]);
-                    errflag = TRUE;
-                    break;
-            }
-        }
+    // Parse the command line arguments.
+    iffy_args_t args;
+    res = iffy_args_parse( &args, argc, argv );
+    if (res != 0) {
+        fputs( stderr, "ERROR: Couldn't parse command line arguments" );
+        return res;
     }
 
-    if (errflag) {
-        printf("usage: %s -w WIDTH -h HEIGHT -u[i|o] -q\n", argv[0]);
-        if (glkunix_arguments[0].argtype != glkunix_arg_End) {
-            glkunix_argumentlist_t *argform;
-            printf("game options:\n");
-            for (argform = glkunix_arguments; 
-                argform->argtype != glkunix_arg_End;
-                argform++) {
-                if (strlen(argform->name) == 0)
-                    printf("  %s\n", argform->desc);
-                else if (argform->argtype == glkunix_arg_ValueFollows)
-                    printf("  %s val: %s\n", argform->name, argform->desc);
-                else if (argform->argtype == glkunix_arg_NumberValue)
-                    printf("  %s val: %s\n", argform->name, argform->desc);
-                else if (argform->argtype == glkunix_arg_ValueCanFollow)
-                    printf("  %s [val]: %s\n", argform->name, argform->desc);
-                else
-                    printf("  %s: %s\n", argform->name, argform->desc);
-            }
-        }
+    // Read in the configuration file.
+    FILE * optionsFile; 
+    res = iffy_config_open( optionsFile, args.configFile );
+    if (res != 0) {
+        fputs( stderr, "ERROR: Couldn't open options file" );
+        return res;
+    }
+
+    // Parse the configuration file.
+    iffy_options_t options;
+    res = iffy_config_parse( &options, optionsFile );
+    if (res != 0) {
+        fputs( stderr, "ERROR: Couldn't parse options file" );
+        return res;
+    }
+
+    // Set up the callbacks and IRC session.
+    irc_callbacks_t callbacks;
+    iffy_callbacks_init( &callbacks, &options );
+
+    irc_session_t * session = irc_create_session( &callbacks );
+    if (!session) {
+        fputs( stderr, "ERROR: Couldn't create IRC session" );
         return 1;
     }
-    
-    /* Initialize things. */
+
+    // Set up libircclient session options XXX
+
+    // Connect to the IRC server.
+    res = irc_connect( session, options.server, options.port, 0, options.nick, options.username, options.realName );
+    if (res != 0) {
+        fputs( stderr, "ERROR: Couldn't connect to the IRC network" );
+        return res;
+    }
+
+    // Initialize some internal data structures.
     gli_initialize_misc();
-    
-    inittime = TRUE;
-    if (!glkunix_startup_code(&startdata)) {
-        glk_exit();
-    }
-    inittime = FALSE;
 
-    if (display_version) {
-        printf("Welcome to the Cheap Glk Implementation, library version %s.\n\n", 
-            LIBRARY_VERSION);
-    }
+    // Call the GLK process.
     glk_main();
     glk_exit();
     

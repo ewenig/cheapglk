@@ -22,6 +22,8 @@
 #include <stdint.h>
 typedef uint32_t glui32;
 typedef int32_t glsi32;
+typedef uint8_t glui8;
+typedef int8_t glsi8;
 
 /* These are the compile-time conditionals that reveal various Glk optional
     modules. Note that if GLK_MODULE_SOUND2 is defined, GLK_MODULE_SOUND

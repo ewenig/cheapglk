@@ -1,5 +1,8 @@
 *.o
 *.a
+*.swp
 Make.*
 tags
 todo
+.clang_complete
+.clang-format

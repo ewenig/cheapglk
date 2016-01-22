@@ -3,16 +3,18 @@
 
 typedef struct {
     char * configFile;
-    uint8 daemonize;
-} iffy_args_h;
+    glui8 daemonize;
+} iffy_args_t;
 
 typedef struct {
-    char * network;
-    uint16 port;
+    char * server;
+    uint16_t port;
     char * nick;
+    char * username;
     char * pass;
     char * channel;
-} iffy_options_h;
+    char * realName;
+} iffy_options_t;
 
 #endif
 
