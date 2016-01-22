@@ -9,8 +9,6 @@
 #include "cheapglk.h"
 #include "glkstart.h"
 #include "iffy.h"
-#include "callbacks.h"
-#include "config.h"
 
 int gli_screenwidth = 80;
 int gli_screenheight = 24;

@@ -1,9 +1,11 @@
 #ifndef IFFY_H
 #define IFFY_H
-
+#include <glib.h>
 #define malloc( N ) calloc( 1, N )
-#define iffy_err( N ) fputs( "ERROR: " N, stderr )
-#define iffy_errf( N, M ) fprintf( stderr, N, M )
+#define iffy_err( N ) fputs( "ERROR: " N "\n", stderr )
+#define iffy_errf( N, M ) fprintf( stderr, "ERROR: " N "\n", M )
+#define iffy_warn( N ) fputs( "WARNING: " N "\n", stderr )
+#define iffy_warnf( N, M ) fprintf( stderr, "WARNING: " N "\n", M )
 
 #define IFFY_GROUP_NAME "iffy"
 
@@ -34,10 +36,22 @@ typedef struct
 
 typedef struct
 {
+    char *nick;
+    gboolean hasOps;
+} iffy_user;
+
+typedef struct
+{
     iffy_state_files_t *files;
     iffy_state_options_t *opts;
+    GSList *users;
+    gboolean acceptingRplNamreply;
 } iffy_state_t;
 
 iffy_state_t *state;
+
+#include "callbacks.h"
+#include "state.h"
+#include "config.h"
 
 #endif

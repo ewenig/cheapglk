@@ -12,9 +12,10 @@ glui8 iffy_callbacks_init( irc_callbacks_t *target, iffy_state_options_t *option
 
 void iffy_callback_connect( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
 {
+    int res;
+
     if ( state->opts->pass != NULL )
     {
-        int res;
         char *identifyStr;
         identifyStr = malloc( sizeof( state->opts->pass ) + 10 );
         if ( identifyStr == NULL )
@@ -34,19 +35,33 @@ void iffy_callback_connect( irc_session_t *session, const char *event, const cha
         }
     }
 
+    res = irc_cmd_join( session, state->opts->channel, 0 );
+    if ( res )
+    {
+        iffy_errf( "Couldn't join %s", state->opts->channel );
+    }
+
+    state->acceptingRplNamreply = 1;
+    irc_cmd_names( session, state->opts->channel );
+
     return;
 }
 
 void iffy_callback_quitpart( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
 {
-    // stub function
-    return;
-}
+    // dummy object to help us find the user entry
+    iffy_user searchUser = { (char *)origin, 0 };
+    GSList *targetUser = g_slist_find_custom( state->users, &searchUser, iffy_users_cmp );
 
-void iffy_callback_nick( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
-{
-    // stub function
-    return;
+    if ( targetUser == NULL )
+    {
+        // this shouldn't happen
+        iffy_warnf( "Received %s event for untracked user", event );
+        return;
+    }
+
+    // delete the user entry
+    state->users = g_slist_remove( state->users, targetUser );
 }
 
 void iffy_callback_umode( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
@@ -67,8 +82,80 @@ void iffy_callback_privmsg( irc_session_t *session, const char *event, const cha
     return;
 }
 
-void iffy_callback_numeric( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
+void iffy_callback_nick( irc_session_t *session, unsigned int event, const char *origin, const char **params, unsigned int count )
 {
-    // stub function
+    // dummy object to help us find the user entry
+    iffy_user searchUser = { (char *)origin, 0 };
+    GSList *targetUser = g_slist_find_custom( state->users, &searchUser, iffy_users_cmp );
+
+    if ( targetUser == NULL )
+    {
+        // this shouldn't happen
+        iffy_warn( "Received nick event for untracked user" );
+        return;
+    }
+
+    // update the user entry
+    ( (iffy_user *)g_slist_nth_data( state->users, g_slist_position( state->users, targetUser ) ) )->nick =
+    (char *)params[0];
+}
+
+void iffy_callback_numeric( irc_session_t *session, unsigned int event, const char *origin, const char **params, unsigned int count )
+{
+    switch ( event )
+    {
+    case LIBIRC_RFC_RPL_NAMREPLY:
+        if ( state->acceptingRplNamreply )
+        {
+            int i = -1;
+            char **nicksStr;
+            nicksStr = g_strsplit( params[count - 1], " ", 0 );
+            while ( nicksStr[++i] != NULL )
+            {
+                iffy_user *newUser;
+                newUser = malloc( sizeof( iffy_user ) );
+                if ( newUser == NULL )
+                {
+                    iffy_err( "Couldn't allocate struct for new user" );
+                }
+                newUser->hasOps = ( *nicksStr[i] == '@' || *nicksStr[i] == '&' ) ? 1 : 0;
+                newUser->nick = strdup( nicksStr[i] + 1 );
+
+                if ( strcmp( newUser->nick, state->opts->nick ) == 0 )
+                {
+                    continue;
+                }
+
+                state->users = g_slist_insert( state->users, newUser, -1 );
+            }
+        }
+        else
+        {
+            iffy_warn( "RPL_NAMREPLY called when not accepting response" );
+        }
+        break;
+    case LIBIRC_RFC_RPL_ENDOFNAMES:
+        if ( state->acceptingRplNamreply )
+        {
+            state->acceptingRplNamreply = 0;
+        }
+        else
+        {
+            iffy_warn( "RPL_ENDOFNAMES called when not accepting response" );
+        }
+        break;
+    }
     return;
+}
+
+gint iffy_users_cmp( gconstpointer a, gconstpointer b )
+{
+    if ( strcmp( ( (iffy_user *)a )->nick, ( (iffy_user *)b )->nick ) == 0 )
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
 }
