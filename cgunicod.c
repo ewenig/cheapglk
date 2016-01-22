@@ -4,122 +4,141 @@
 #include "glk.h"
 #include "cheapglk.h"
 
-void gli_putchar_utf8(glui32 val, FILE *fl)
+void gli_putchar_utf8( glui32 val, FILE *fl )
 {
-    if (val < 0x80) {
-        putc(val, fl);
+    if ( val < 0x80 )
+    {
+        putc( val, fl );
     }
-    else if (val < 0x800) {
-        putc((0xC0 | ((val & 0x7C0) >> 6)), fl);
-        putc((0x80 |  (val & 0x03F)     ),  fl);
+    else if ( val < 0x800 )
+    {
+        putc( ( 0xC0 | ( ( val & 0x7C0 ) >> 6 ) ), fl );
+        putc( ( 0x80 | ( val & 0x03F ) ), fl );
     }
-    else if (val < 0x10000) {
-        putc((0xE0 | ((val & 0xF000) >> 12)), fl);
-        putc((0x80 | ((val & 0x0FC0) >>  6)), fl);
-        putc((0x80 |  (val & 0x003F)      ),  fl);
+    else if ( val < 0x10000 )
+    {
+        putc( ( 0xE0 | ( ( val & 0xF000 ) >> 12 ) ), fl );
+        putc( ( 0x80 | ( ( val & 0x0FC0 ) >> 6 ) ), fl );
+        putc( ( 0x80 | ( val & 0x003F ) ), fl );
     }
-    else if (val < 0x200000) {
-        putc((0xF0 | ((val & 0x1C0000) >> 18)), fl);
-        putc((0x80 | ((val & 0x03F000) >> 12)), fl);
-        putc((0x80 | ((val & 0x000FC0) >>  6)), fl);
-        putc((0x80 |  (val & 0x00003F)      ),  fl);
+    else if ( val < 0x200000 )
+    {
+        putc( ( 0xF0 | ( ( val & 0x1C0000 ) >> 18 ) ), fl );
+        putc( ( 0x80 | ( ( val & 0x03F000 ) >> 12 ) ), fl );
+        putc( ( 0x80 | ( ( val & 0x000FC0 ) >> 6 ) ), fl );
+        putc( ( 0x80 | ( val & 0x00003F ) ), fl );
     }
-    else {
-        putc('?', fl);
+    else
+    {
+        putc( '?', fl );
     }
 }
 
-glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
-    glui32 *out, glui32 outlen)
+glui32 gli_parse_utf8( unsigned char *buf, glui32 buflen, glui32 *out, glui32 outlen )
 {
     glui32 pos = 0;
     glui32 outpos = 0;
     glui32 res;
     glui32 val0, val1, val2, val3;
 
-    while (outpos < outlen) {
-        if (pos >= buflen)
+    while ( outpos < outlen )
+    {
+        if ( pos >= buflen )
             break;
 
         val0 = buf[pos++];
 
-        if (val0 < 0x80) {
+        if ( val0 < 0x80 )
+        {
             res = val0;
             out[outpos++] = res;
             continue;
         }
 
-        if ((val0 & 0xe0) == 0xc0) {
-            if (pos+1 > buflen) {
-                gli_strict_warning("incomplete two-byte character");
+        if ( ( val0 & 0xe0 ) == 0xc0 )
+        {
+            if ( pos + 1 > buflen )
+            {
+                gli_strict_warning( "incomplete two-byte character" );
                 break;
             }
             val1 = buf[pos++];
-            if ((val1 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed two-byte character");
+            if ( ( val1 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed two-byte character" );
                 break;
             }
-            res = (val0 & 0x1f) << 6;
-            res |= (val1 & 0x3f);
+            res = ( val0 & 0x1f ) << 6;
+            res |= ( val1 & 0x3f );
             out[outpos++] = res;
             continue;
         }
 
-        if ((val0 & 0xf0) == 0xe0) {
-            if (pos+2 > buflen) {
-                gli_strict_warning("incomplete three-byte character");
+        if ( ( val0 & 0xf0 ) == 0xe0 )
+        {
+            if ( pos + 2 > buflen )
+            {
+                gli_strict_warning( "incomplete three-byte character" );
                 break;
             }
             val1 = buf[pos++];
             val2 = buf[pos++];
-            if ((val1 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed three-byte character");
+            if ( ( val1 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed three-byte character" );
                 break;
             }
-            if ((val2 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed three-byte character");
+            if ( ( val2 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed three-byte character" );
                 break;
             }
-            res = (((val0 & 0xf)<<12)  & 0x0000f000);
-            res |= (((val1 & 0x3f)<<6) & 0x00000fc0);
-            res |= (((val2 & 0x3f))    & 0x0000003f);
+            res = ( ( ( val0 & 0xf ) << 12 ) & 0x0000f000 );
+            res |= ( ( ( val1 & 0x3f ) << 6 ) & 0x00000fc0 );
+            res |= ( ( ( val2 & 0x3f ) ) & 0x0000003f );
             out[outpos++] = res;
             continue;
         }
 
-        if ((val0 & 0xf0) == 0xf0) {
-            if ((val0 & 0xf8) != 0xf0) {
-                gli_strict_warning("malformed four-byte character");
-                break;        
+        if ( ( val0 & 0xf0 ) == 0xf0 )
+        {
+            if ( ( val0 & 0xf8 ) != 0xf0 )
+            {
+                gli_strict_warning( "malformed four-byte character" );
+                break;
             }
-            if (pos+3 > buflen) {
-                gli_strict_warning("incomplete four-byte character");
+            if ( pos + 3 > buflen )
+            {
+                gli_strict_warning( "incomplete four-byte character" );
                 break;
             }
             val1 = buf[pos++];
             val2 = buf[pos++];
             val3 = buf[pos++];
-            if ((val1 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed four-byte character");
+            if ( ( val1 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed four-byte character" );
                 break;
             }
-            if ((val2 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed four-byte character");
+            if ( ( val2 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed four-byte character" );
                 break;
             }
-            if ((val3 & 0xc0) != 0x80) {
-                gli_strict_warning("malformed four-byte character");
+            if ( ( val3 & 0xc0 ) != 0x80 )
+            {
+                gli_strict_warning( "malformed four-byte character" );
                 break;
             }
-            res = (((val0 & 0x7)<<18)   & 0x1c0000);
-            res |= (((val1 & 0x3f)<<12) & 0x03f000);
-            res |= (((val2 & 0x3f)<<6)  & 0x000fc0);
-            res |= (((val3 & 0x3f))     & 0x00003f);
+            res = ( ( ( val0 & 0x7 ) << 18 ) & 0x1c0000 );
+            res |= ( ( ( val1 & 0x3f ) << 12 ) & 0x03f000 );
+            res |= ( ( ( val2 & 0x3f ) << 6 ) & 0x000fc0 );
+            res |= ( ( ( val3 & 0x3f ) ) & 0x00003f );
             out[outpos++] = res;
             continue;
         }
 
-        gli_strict_warning("malformed character");
+        gli_strict_warning( "malformed character" );
     }
 
     return outpos;
@@ -133,13 +152,13 @@ glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
 
 #include "cgunigen.c"
 
-#define CASE_UPPER (0)
-#define CASE_LOWER (1)
-#define CASE_TITLE (2)
-#define CASE_IDENT (3)
+#define CASE_UPPER ( 0 )
+#define CASE_LOWER ( 1 )
+#define CASE_TITLE ( 2 )
+#define CASE_IDENT ( 3 )
 
-#define COND_ALL (0)
-#define COND_LINESTART (1)
+#define COND_ALL ( 0 )
+#define COND_LINESTART ( 1 )
 
 /* Apply a case change to the buffer. The len is the length of the buffer
    array; numchars is the number of characters originally in it. (This
@@ -147,8 +166,7 @@ glui32 gli_parse_utf8(unsigned char *buf, glui32 buflen,
    the return value will be the full number of characters that the
    converted string should have contained.
 */
-static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
-    glui32 numchars, int destcase, int cond, int changerest)
+static glui32 gli_buffer_change_case( glui32 *buf, glui32 len, glui32 numchars, int destcase, int cond, int changerest )
 {
     glui32 ix, jx;
     glui32 *outbuf;
@@ -157,13 +175,14 @@ static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
     int dest_block_rest, dest_block_first;
     int dest_spec_rest, dest_spec_first;
 
-    switch (cond) {
+    switch ( cond )
+    {
     case COND_ALL:
         dest_spec_rest = destcase;
         dest_spec_first = destcase;
         break;
     case COND_LINESTART:
-        if (changerest)
+        if ( changerest )
             dest_spec_rest = CASE_LOWER;
         else
             dest_spec_rest = CASE_IDENT;
@@ -172,17 +191,18 @@ static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
     }
 
     dest_block_rest = dest_spec_rest;
-    if (dest_block_rest == CASE_TITLE)
+    if ( dest_block_rest == CASE_TITLE )
         dest_block_rest = CASE_UPPER;
     dest_block_first = dest_spec_first;
-    if (dest_block_first == CASE_TITLE)
+    if ( dest_block_first == CASE_TITLE )
         dest_block_first = CASE_UPPER;
 
     newoutbuf = NULL;
     outcount = 0;
     outbuf = buf;
 
-    for (ix=0; ix<numchars; ix++) {
+    for ( ix = 0; ix < numchars; ix++ )
+    {
         int target;
         int isfirst;
         glui32 res;
@@ -191,98 +211,100 @@ static glui32 gli_buffer_change_case(glui32 *buf, glui32 len,
         glui32 speccount;
         glui32 ch = buf[ix];
 
-        isfirst = (ix == 0);
-        
-        target = (isfirst ? dest_block_first : dest_block_rest);
+        isfirst = ( ix == 0 );
 
-        if (target == CASE_IDENT) {
+        target = ( isfirst ? dest_block_first : dest_block_rest );
+
+        if ( target == CASE_IDENT )
+        {
             res = ch;
         }
-        else {
+        else
+        {
             gli_case_block_t *block;
 
-            GET_CASE_BLOCK(ch, &block);
-            if (!block)
+            GET_CASE_BLOCK( ch, &block );
+            if ( !block )
                 res = ch;
             else
                 res = block[ch & 0xFF][target];
         }
 
-        if (res != 0xFFFFFFFF || res == ch) {
+        if ( res != 0xFFFFFFFF || res == ch )
+        {
             /* simple case */
-            if (outcount < len)
+            if ( outcount < len )
                 outbuf[outcount] = res;
             outcount++;
             continue;
         }
 
-        target = (isfirst ? dest_spec_first : dest_spec_rest);
+        target = ( isfirst ? dest_spec_first : dest_spec_rest );
 
         /* complicated cases */
-        GET_CASE_SPECIAL(ch, &special);
-        if (!special) {
-            gli_strict_warning("inconsistency in cgunigen.c");
+        GET_CASE_SPECIAL( ch, &special );
+        if ( !special )
+        {
+            gli_strict_warning( "inconsistency in cgunigen.c" );
             continue;
         }
         ptr = &unigen_special_array[special[target]];
-        speccount = *(ptr++);
-        
-        if (speccount == 1) {
+        speccount = *( ptr++ );
+
+        if ( speccount == 1 )
+        {
             /* simple after all */
-            if (outcount < len)
+            if ( outcount < len )
                 outbuf[outcount] = ptr[0];
             outcount++;
             continue;
         }
 
         /* Now we have to allocate a new buffer, if we haven't already. */
-        if (!newoutbuf) {
-            newoutbuf = malloc((len+1) * sizeof(glui32));
-            if (!newoutbuf)
+        if ( !newoutbuf )
+        {
+            newoutbuf = malloc( ( len + 1 ) * sizeof( glui32 ) );
+            if ( !newoutbuf )
                 return 0;
-            if (outcount)
-                memcpy(newoutbuf, buf, outcount * sizeof(glui32));
+            if ( outcount )
+                memcpy( newoutbuf, buf, outcount * sizeof( glui32 ) );
             outbuf = newoutbuf;
         }
 
-        for (jx=0; jx<speccount; jx++) {
-            if (outcount < len)
+        for ( jx = 0; jx < speccount; jx++ )
+        {
+            if ( outcount < len )
                 outbuf[outcount] = ptr[jx];
             outcount++;
         }
     }
 
-    if (newoutbuf) {
+    if ( newoutbuf )
+    {
         glui32 finallen = outcount;
-        if (finallen > len)
+        if ( finallen > len )
             finallen = len;
-        if (finallen)
-            memcpy(buf, newoutbuf, finallen * sizeof(glui32));
-        free(newoutbuf);
+        if ( finallen )
+            memcpy( buf, newoutbuf, finallen * sizeof( glui32 ) );
+        free( newoutbuf );
     }
 
     return outcount;
 }
 
-glui32 glk_buffer_to_lower_case_uni(glui32 *buf, glui32 len,
-    glui32 numchars)
+glui32 glk_buffer_to_lower_case_uni( glui32 *buf, glui32 len, glui32 numchars )
 {
-    return gli_buffer_change_case(buf, len, numchars, 
-        CASE_LOWER, COND_ALL, TRUE);
+    return gli_buffer_change_case( buf, len, numchars, CASE_LOWER, COND_ALL, TRUE );
 }
 
-glui32 glk_buffer_to_upper_case_uni(glui32 *buf, glui32 len,
-    glui32 numchars)
+glui32 glk_buffer_to_upper_case_uni( glui32 *buf, glui32 len, glui32 numchars )
 {
-    return gli_buffer_change_case(buf, len, numchars, 
-        CASE_UPPER, COND_ALL, TRUE);
+    return gli_buffer_change_case( buf, len, numchars, CASE_UPPER, COND_ALL, TRUE );
 }
 
-glui32 glk_buffer_to_title_case_uni(glui32 *buf, glui32 len,
-    glui32 numchars, glui32 lowerrest)
+glui32 glk_buffer_to_title_case_uni( glui32 *buf, glui32 len, glui32 numchars, glui32 lowerrest )
 {
-    return gli_buffer_change_case(buf, len, numchars, 
-        CASE_TITLE, COND_LINESTART, lowerrest);
+    return gli_buffer_change_case( buf, len, numchars, CASE_TITLE, COND_LINESTART, lowerrest );
 }
 
 #endif /* GLK_MODULE_UNICODE */
@@ -293,9 +315,9 @@ glui32 glk_buffer_to_title_case_uni(glui32 *buf, glui32 len,
    So don't try to use GLK_MODULE_UNICODE_NORM without GLK_MODULE_UNICODE.
 */
 
-static glui32 combining_class(glui32 ch)
+static glui32 combining_class( glui32 ch )
 {
-    RETURN_COMBINING_CLASS(ch);
+    RETURN_COMBINING_CLASS( ch );
 }
 
 /* This returns a new buffer (possibly longer), containing the decomposed
@@ -303,8 +325,7 @@ static glui32 combining_class(glui32 ch)
    On exit, *numcharsref contains the size of the returned buffer.
    The original buffer is unchanged.
 */
-static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf, 
-    glui32 *numcharsref)
+static glui32 *gli_buffer_canon_decompose_uni( glui32 *buf, glui32 *numcharsref )
 {
     /* The algorithm for the canonical decomposition of a string: For
        each character, look up the decomposition in the decomp table.
@@ -314,39 +335,44 @@ static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf,
 
     glui32 numchars = *numcharsref;
     glui32 destsize = numchars * 2 + 16;
-    glui32 *dest = (glui32 *)malloc(destsize * sizeof(glui32));
+    glui32 *dest = (glui32 *)malloc( destsize * sizeof( glui32 ) );
     glui32 destlen = 0;
     glui32 ix, jx;
     int anycombining = FALSE;
 
-    if (!dest)
+    if ( !dest )
         return NULL;
 
-    for (ix=0; ix<numchars; ix++) {
+    for ( ix = 0; ix < numchars; ix++ )
+    {
         glui32 ch = buf[ix];
         gli_decomp_block_t *block;
         glui32 count, pos;
 
-        if (combining_class(ch))
+        if ( combining_class( ch ) )
             anycombining = TRUE;
 
-        GET_DECOMP_BLOCK(ch, &block);
-        if (block) {
-            block += (ch & 0xFF);
-            count = (*block)[0];
-            pos = (*block)[1];
+        GET_DECOMP_BLOCK( ch, &block );
+        if ( block )
+        {
+            block += ( ch & 0xFF );
+            count = ( *block )[0];
+            pos = ( *block )[1];
         }
-        else {
-            GET_DECOMP_SPECIAL(ch, &count, &pos);
+        else
+        {
+            GET_DECOMP_SPECIAL( ch, &count, &pos );
         }
 
-        if (!count) {
+        if ( !count )
+        {
             /* The simple case: this character doesn't decompose. Push
                it straight into the destination. */
-            if (destlen >= destsize) {
+            if ( destlen >= destsize )
+            {
                 destsize = destsize * 2;
-                dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
-                if (!dest)
+                dest = (glui32 *)realloc( dest, destsize * sizeof( glui32 ) );
+                if ( !dest )
                     return NULL;
             }
             dest[destlen] = ch;
@@ -364,44 +390,53 @@ static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf,
            are decomposable; that was already recursively expanded when
            unigen_decomp_data was generated. */
 
-        if (destlen+count >= destsize) {
+        if ( destlen + count >= destsize )
+        {
             /* Okay, that wasn't enough. Expand more. */
             destsize = destsize * 2 + count;
-            dest = (glui32 *)realloc(dest, destsize * sizeof(glui32));
-            if (!dest)
+            dest = (glui32 *)realloc( dest, destsize * sizeof( glui32 ) );
+            if ( !dest )
                 return NULL;
         }
-        for (jx=0; jx<count; jx++) {
-            dest[destlen] = unigen_decomp_data[pos+jx];
+        for ( jx = 0; jx < count; jx++ )
+        {
+            dest[destlen] = unigen_decomp_data[pos + jx];
             destlen++;
         }
     }
 
-    if (anycombining) {
+    if ( anycombining )
+    {
         /* Now we sort groups of combining characters. This should be a
            stable sort by the combining-class number. We're lazy and
            nearly all groups are short, so we'll just bubble-sort. */
         glui32 grpstart, grpend, kx;
         ix = 0;
-        while (ix < destlen) {
-            if (!combining_class(dest[ix])) {
+        while ( ix < destlen )
+        {
+            if ( !combining_class( dest[ix] ) )
+            {
                 ix++;
                 continue;
             }
-            if (ix >= destlen)
+            if ( ix >= destlen )
                 break;
             grpstart = ix;
-            while (ix < destlen && combining_class(dest[ix])) 
+            while ( ix < destlen && combining_class( dest[ix] ) )
                 ix++;
             grpend = ix;
-            if (grpend - grpstart >= 2) {
+            if ( grpend - grpstart >= 2 )
+            {
                 /* Sort this group. */
-                for (jx = grpend-1; jx > grpstart; jx--) {
-                    for (kx = grpstart; kx < jx; kx++) {
-                        if (combining_class(dest[kx]) > combining_class(dest[kx+1])) {
+                for ( jx = grpend - 1; jx > grpstart; jx-- )
+                {
+                    for ( kx = grpstart; kx < jx; kx++ )
+                    {
+                        if ( combining_class( dest[kx] ) > combining_class( dest[kx + 1] ) )
+                        {
                             glui32 tmp = dest[kx];
-                            dest[kx] = dest[kx+1];
-                            dest[kx+1] = tmp;
+                            dest[kx] = dest[kx + 1];
+                            dest[kx + 1] = tmp;
                         }
                     }
                 }
@@ -413,16 +448,16 @@ static glui32 *gli_buffer_canon_decompose_uni(glui32 *buf,
     return dest;
 }
 
-static glui32 check_composition(glui32 ch1, glui32 ch2)
+static glui32 check_composition( glui32 ch1, glui32 ch2 )
 {
-    RETURN_COMPOSITION(ch1, ch2);
+    RETURN_COMPOSITION( ch1, ch2 );
 }
 
 /* This composes characters in the given buffer, in place. It returns the
    number of characters in the result, which will be less than or equal
    to len.
 */
-static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 len)
+static glui32 gli_buffer_canon_compose_uni( glui32 *buf, glui32 len )
 {
     /* This algorithm is lifted from the Java sample code at
        <http://www.unicode.org/reports/tr15/Normalizer.html>.
@@ -437,31 +472,36 @@ static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 len)
     glui32 curch, newch, curclass, newclass, res;
     glui32 ix, jx, pos;
 
-    if (len == 0)
+    if ( len == 0 )
         return 0;
 
     pos = 0;
     curch = buf[0];
-    curclass = combining_class(curch);
-    if (curclass)
+    curclass = combining_class( curch );
+    if ( curclass )
         curclass = 999; /* just in case the first character is a combiner */
     ix = 1;
     jx = ix;
-    while (1) {
-        if (jx >= len) {
+    while ( 1 )
+    {
+        if ( jx >= len )
+        {
             buf[pos] = curch;
             pos = ix;
             break;
         }
         newch = buf[jx];
-        newclass = combining_class(newch);
-        res = check_composition(curch, newch);
-        if (res && (!curclass || curclass < newclass)) {
+        newclass = combining_class( newch );
+        res = check_composition( curch, newch );
+        if ( res && ( !curclass || curclass < newclass ) )
+        {
             curch = res;
             buf[pos] = curch;
         }
-        else {
-            if (!newclass) {
+        else
+        {
+            if ( !newclass )
+            {
                 pos = ix;
                 curch = newch;
             }
@@ -475,47 +515,44 @@ static glui32 gli_buffer_canon_compose_uni(glui32 *buf, glui32 len)
     return pos;
 }
 
-glui32 glk_buffer_canon_decompose_uni(glui32 *buf, glui32 len,
-    glui32 numchars)
+glui32 glk_buffer_canon_decompose_uni( glui32 *buf, glui32 len, glui32 numchars )
 {
-    glui32 *dest = gli_buffer_canon_decompose_uni(buf, &numchars);
+    glui32 *dest = gli_buffer_canon_decompose_uni( buf, &numchars );
     glui32 newlen;
 
-    if (!dest)
+    if ( !dest )
         return 0;
 
     /* Copy the data back. */
     newlen = numchars;
-    if (newlen > len)
+    if ( newlen > len )
         newlen = len;
-    if (newlen)
-        memcpy(buf, dest, newlen * sizeof(glui32));
-    free(dest);
+    if ( newlen )
+        memcpy( buf, dest, newlen * sizeof( glui32 ) );
+    free( dest );
 
     return numchars;
 }
 
-glui32 glk_buffer_canon_normalize_uni(glui32 *buf, glui32 len,
-    glui32 numchars)
+glui32 glk_buffer_canon_normalize_uni( glui32 *buf, glui32 len, glui32 numchars )
 {
     glui32 newlen;
-    glui32 *dest = gli_buffer_canon_decompose_uni(buf, &numchars);
+    glui32 *dest = gli_buffer_canon_decompose_uni( buf, &numchars );
 
-    if (!dest)
+    if ( !dest )
         return 0;
 
-    numchars = gli_buffer_canon_compose_uni(dest, numchars);
+    numchars = gli_buffer_canon_compose_uni( dest, numchars );
 
     /* Copy the data back. */
     newlen = numchars;
-    if (newlen > len)
+    if ( newlen > len )
         newlen = len;
-    if (newlen)
-        memcpy(buf, dest, newlen * sizeof(glui32));
-    free(dest);
+    if ( newlen )
+        memcpy( buf, dest, newlen * sizeof( glui32 ) );
+    free( dest );
 
     return numchars;
 }
 
 #endif /* GLK_MODULE_UNICODE_NORM */
-

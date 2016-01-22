@@ -8,7 +8,7 @@
     with the various Unix Glk libraries -- at least, the three I wrote.
     (I encourage anyone writing a Unix Glk library to use this interface,
     but it's not part of the Glk spec.)
-    
+
     Because Glk is *almost* perfectly portable, this interface *almost*
     doesn't have to exist. In practice, it's small.
 */
@@ -28,32 +28,31 @@
 #define NULL 0
 #endif
 
-#define glkunix_arg_End (0)
-#define glkunix_arg_ValueFollows (1)
-#define glkunix_arg_NoValue (2)
-#define glkunix_arg_ValueCanFollow (3)
-#define glkunix_arg_NumberValue (4)
+#define glkunix_arg_End ( 0 )
+#define glkunix_arg_ValueFollows ( 1 )
+#define glkunix_arg_NoValue ( 2 )
+#define glkunix_arg_ValueCanFollow ( 3 )
+#define glkunix_arg_NumberValue ( 4 )
 
-typedef struct glkunix_argumentlist_struct {
+typedef struct glkunix_argumentlist_struct
+{
     char *name;
     int argtype;
     char *desc;
 } glkunix_argumentlist_t;
 
-typedef struct glkunix_startup_struct {
+typedef struct glkunix_startup_struct
+{
     int argc;
     char **argv;
 } glkunix_startup_t;
 
 extern glkunix_argumentlist_t glkunix_arguments[];
 
-extern int glkunix_startup_code(glkunix_startup_t *data);
+extern int glkunix_startup_code( glkunix_startup_t *data );
 
-extern void glkunix_set_base_file(char *filename);
-extern strid_t glkunix_stream_open_pathname_gen(char *pathname, 
-    glui32 writemode, glui32 textmode, glui32 rock);
-extern strid_t glkunix_stream_open_pathname(char *pathname, glui32 textmode, 
-    glui32 rock);
+extern void glkunix_set_base_file( char *filename );
+extern strid_t glkunix_stream_open_pathname_gen( char *pathname, glui32 writemode, glui32 textmode, glui32 rock );
+extern strid_t glkunix_stream_open_pathname( char *pathname, glui32 textmode, glui32 rock );
 
 #endif /* GT_START_H */
-
