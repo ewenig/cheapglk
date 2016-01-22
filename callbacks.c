@@ -3,10 +3,26 @@
 #include <string.h>
 #include "callbacks.h"
 
-/* Initialize the IRC client session */
-glui8 iffy_callbacks_init( irc_callbacks_t *target, iffy_state_options_t *options )
+glui8 iffy_callbacks_init( irc_callbacks_t **target, iffy_state_options_t *options )
 {
-    memset( target, 0, sizeof( &target ) );
+    *target = malloc( sizeof( irc_callbacks_t ) );
+    if ( target == NULL )
+    {
+        iffy_err( "Couldn't initialize the callbacks struct" );
+        return 1;
+    }
+
+    memset( *target, 0, sizeof( irc_callbacks_t ) );
+    // set the callbacks
+    ( *target )->event_connect = iffy_callback_connect;
+    ( *target )->event_quit = iffy_callback_quitpart;
+    ( *target )->event_part = iffy_callback_quitpart;
+    ( *target )->event_umode = iffy_callback_umode;
+    ( *target )->event_channel = iffy_callback_channel;
+    ( *target )->event_privmsg = iffy_callback_privmsg;
+    ( *target )->event_nick = iffy_callback_nick;
+    ( *target )->event_numeric = iffy_callback_numeric;
+
     return 0; // success
 }
 
@@ -42,7 +58,7 @@ void iffy_callback_connect( irc_session_t *session, const char *event, const cha
     }
 
     state->acceptingRplNamreply = 1;
-    irc_cmd_names( session, state->opts->channel );
+    // irc_cmd_names( session, state->opts->channel );
 
     return;
 }
@@ -82,7 +98,7 @@ void iffy_callback_privmsg( irc_session_t *session, const char *event, const cha
     return;
 }
 
-void iffy_callback_nick( irc_session_t *session, unsigned int event, const char *origin, const char **params, unsigned int count )
+void iffy_callback_nick( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
 {
     // dummy object to help us find the user entry
     iffy_user searchUser = { (char *)origin, 0 };
@@ -119,7 +135,7 @@ void iffy_callback_numeric( irc_session_t *session, unsigned int event, const ch
                     iffy_err( "Couldn't allocate struct for new user" );
                 }
                 newUser->hasOps = ( *nicksStr[i] == '@' || *nicksStr[i] == '&' ) ? 1 : 0;
-                newUser->nick = strdup( nicksStr[i] + 1 );
+                newUser->nick = strdup( ( newUser->hasOps ) ? nicksStr[i] + 1 : nicksStr[i] );
 
                 if ( strcmp( newUser->nick, state->opts->nick ) == 0 )
                 {

@@ -20,12 +20,14 @@ static int inittime = FALSE;
 int main( int argc, char *argv[] )
 {
     glui8 res; // for testing the result of various functions
+    g_set_prgname( "iffy" );
 
     // initialize program state - declared in iffy.h
-    res = iffy_state_init( state );
+    // res = iffy_state_init( state );
+    res = iffy_state_init( );
     if ( res != 0 )
     {
-        iffy_err( "ERROR: Couldn't initialize state" );
+        iffy_err( "Couldn't initialize state" );
         return res;
     }
 
@@ -38,11 +40,11 @@ int main( int argc, char *argv[] )
     }
 
     // Read in the configuration file.
-    GKeyFile *optionsFile = NULL;
-    res = iffy_config_open( optionsFile, args.configFile );
+    GKeyFile *optionsFile;
+    res = iffy_config_open( &optionsFile, args.configFile );
     if ( res != 0 )
     {
-        iffy_err( "ERROR: Couldn't open options file" );
+        iffy_err( "Couldn't open options file" );
         return res;
     }
 
@@ -50,18 +52,18 @@ int main( int argc, char *argv[] )
     res = iffy_config_parse( state->opts, optionsFile );
     if ( res != 0 )
     {
-        iffy_err( "ERROR: Couldn't parse options file" );
+        iffy_err( "Couldn't parse options file" );
         return res;
     }
 
     // Set up the callbacks and IRC session.
-    irc_callbacks_t callbacks;
+    irc_callbacks_t *callbacks = NULL;
     iffy_callbacks_init( &callbacks, state->opts );
 
-    irc_session_t *session = irc_create_session( &callbacks );
+    irc_session_t *session = irc_create_session( callbacks );
     if ( !session )
     {
-        iffy_err( "ERROR: Couldn't create IRC session" );
+        iffy_err( "Couldn't create IRC session" );
         return 1;
     }
 
@@ -72,7 +74,7 @@ int main( int argc, char *argv[] )
                        state->opts->username, state->opts->realName );
     if ( res != 0 )
     {
-        iffy_err( "ERROR: Couldn't connect to the IRC network" );
+        iffy_err( "Couldn't connect to the IRC network" );
         return res;
     }
 
@@ -81,11 +83,12 @@ int main( int argc, char *argv[] )
 
 
     // Call the event loop.
+    // XXX Actually call glk_main, and stick the handrolled event loop in idle points.
     irc_run( session );
 
     // Call the GLK process.
-    glk_main( );
-    glk_exit( );
+    // glk_main( );
+    // glk_exit( );
 
     /* glk_exit() doesn't return, but the compiler may kvetch if main()
         doesn't seem to return a value. */

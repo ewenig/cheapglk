@@ -17,10 +17,11 @@ CC = cc
 
 OPTIONS = -g -Wall
 
-CFLAGS = $(OPTIONS) $(INCLUDEDIRS) -I/usr/local/include -I/usr/local/include/glib-2.0 -I/usr/local/lib/glib-2.0/include
-LDFLAGS = -lircclient -lcrypto -lssl -lglib
+CFLAGS = $(OPTIONS) $(INCLUDEDIRS) $(shell pkg-config --cflags glib-2.0)
+LDFLAGS = -lc $(shell pkg-config --libs glib-2.0) -lcrypto -lssl
 
 GLKLIB = libcheapglk.a
+IRCCLIENTLIB = /usr/local/lib/libircclient.a
 
 CHEAPGLK_OBJS =  \
   cgfref.o cggestal.o cgmisc.o cgstream.o cgstyle.o cgwindow.o cgschan.o \
@@ -33,6 +34,9 @@ all: $(GLKLIB) Make.cheapglk
 
 cgunicod.o: cgunigen.c
 
+iffy: $(CHEAPGLK_OBJS)
+	$(CC) $(CFLAGS) $(CHEAPGLK_OBJS:.o=.c) $(IRCCLIENTLIB) $(LDFLAGS) -o iffy 
+
 $(GLKLIB): $(CHEAPGLK_OBJS)
 	ar r $(GLKLIB) $(CHEAPGLK_OBJS)
 	ranlib $(GLKLIB)
@@ -44,4 +48,4 @@ Make.cheapglk:
 $(CHEAPGLK_OBJS): glk.h $(CHEAPGLK_HEADERS)
 
 clean:
-	rm -f *~ *.o $(GLKLIB) Make.cheapglk
+	rm -f *~ *.o $(GLKLIB) Make.cheapglk iffy

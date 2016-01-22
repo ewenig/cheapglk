@@ -2,29 +2,30 @@
 #include <stdlib.h>
 #include "state.h"
 
-glui8 iffy_state_init( iffy_state_t *target )
+// glui8 iffy_state_init( iffy_state_t *target )
+glui8 iffy_state_init( void )
 {
-    target = (iffy_state_t *)malloc( sizeof( iffy_state_t ) );
-    if ( target == NULL )
+    state = (iffy_state_t *)malloc( sizeof( iffy_state_t ) );
+    if ( state == NULL )
     {
         return 1; // failure
     }
 
-    target->files = (iffy_state_files_t *)malloc( sizeof( iffy_state_files_t ) );
-    if ( target->files == NULL )
+    state->files = (iffy_state_files_t *)malloc( sizeof( iffy_state_files_t ) );
+    if ( state->files == NULL )
     {
         return 1; // failure
     }
 
-    target->opts = (iffy_state_options_t *)malloc( sizeof( iffy_state_options_t ) );
-    if ( target->opts == NULL )
+    state->opts = (iffy_state_options_t *)malloc( sizeof( iffy_state_options_t ) );
+    if ( state->opts == NULL )
     {
         return 1; // failure
     }
 
-    target->users = NULL;
+    state->users = NULL;
 
-    target->acceptingRplNamreply = 0;
+    state->acceptingRplNamreply = 0;
 
     return 0;
 }

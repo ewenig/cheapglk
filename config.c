@@ -14,8 +14,8 @@ glui8 iffy_args_parse( iffy_args_t *target, int argc, char **argv )
 
     // call getopt
     opterr = 0;
-    glui8 c;
-    while ( ( c = getopt( argc, argv, "df:" ) != 1 ) )
+    int c;
+    while ( ( c = ( getopt( argc, argv, "df:" ) ) ) != -1 )
     {
         switch ( c )
         {
@@ -24,24 +24,33 @@ glui8 iffy_args_parse( iffy_args_t *target, int argc, char **argv )
             break;
         case 'f':
             target->configFile = optarg;
+            break;
         case '?':
             if ( optopt == 'f' )
             {
                 iffy_err( "Option -f requires a file argument" );
                 return 1; // failure
             }
+            break;
         }
+    }
+
+    if ( target->configFile == NULL )
+    {
+        iffy_err( "Must specify a config file using -f." );
+        return 1; // failure
     }
 
     return 0; // success
 }
 
-glui8 iffy_config_open( GKeyFile *target, const char *file )
+glui8 iffy_config_open( GKeyFile **target, const char *file )
 {
     gboolean ret;
-    GError *error;
+    GError *error = NULL;
 
-    ret = g_key_file_load_from_file( target, file, G_KEY_FILE_NONE, &error );
+    *target = g_key_file_new( );
+    ret = g_key_file_load_from_file( *target, file, G_KEY_FILE_NONE, &error );
     if ( iffy_config_check_err( &ret, error ) )
     {
         return 1;
@@ -52,7 +61,7 @@ glui8 iffy_config_open( GKeyFile *target, const char *file )
 
 glui8 iffy_config_parse( iffy_state_options_t *target, GKeyFile *handle )
 {
-    GError *error;
+    GError *error = NULL;
 
     memset( target, 0, sizeof( &target ) );
 
@@ -78,10 +87,7 @@ glui8 iffy_config_parse( iffy_state_options_t *target, GKeyFile *handle )
         return 1;
     }
     target->pass = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Password", &error );
-    if ( iffy_config_check_err( target->pass, error ) )
-    {
-        return 1;
-    }
+    error = NULL;
     target->channel = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Channel", &error );
     if ( iffy_config_check_err( target->channel, error ) )
     {
