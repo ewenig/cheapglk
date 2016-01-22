@@ -1,3 +1,5 @@
 *.o
 *.a
 Make.*
+tags
+todo
