@@ -60,8 +60,8 @@ int main( int argc, char *argv[] )
     irc_callbacks_t *callbacks = NULL;
     iffy_callbacks_init( &callbacks, state->opts );
 
-    irc_session_t *session = irc_create_session( callbacks );
-    if ( !session )
+    state->session = irc_create_session( callbacks );
+    if ( !state->session )
     {
         iffy_err( "Couldn't create IRC session" );
         return 1;
@@ -70,7 +70,7 @@ int main( int argc, char *argv[] )
     // Set up libircclient session options XXX
 
     // Connect to the IRC server.
-    res = irc_connect( session, state->opts->server, state->opts->port, 0, state->opts->nick,
+    res = irc_connect( state->session, state->opts->server, state->opts->port, 0, state->opts->nick,
                        state->opts->username, state->opts->realName );
     if ( res != 0 )
     {
@@ -83,12 +83,12 @@ int main( int argc, char *argv[] )
 
 
     // Call the event loop.
-    // XXX Actually call glk_main, and stick the handrolled event loop in idle points.
-    irc_run( session );
+    // XXX Actually call glk_main, and stick the handrolled event loop (iffy_loop_tick) in idle points.
+    // irc_run( state->session );
 
     // Call the GLK process.
-    // glk_main( );
-    // glk_exit( );
+    glk_main( );
+    glk_exit( );
 
     /* glk_exit() doesn't return, but the compiler may kvetch if main()
         doesn't seem to return a value. */

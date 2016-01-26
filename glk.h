@@ -252,7 +252,7 @@ extern strid_t glk_stream_get_current( void );
 extern void glk_put_char( unsigned char ch );
 extern void glk_put_char_stream( strid_t str, unsigned char ch );
 extern void glk_put_string( char *s );
-extern void glk_put_string_stream( strid_t str, char *s );
+extern void glk_put_string_stream( strid_t str, const char *s );
 extern void glk_put_buffer( char *buf, glui32 len );
 extern void glk_put_buffer_stream( strid_t str, char *buf, glui32 len );
 extern void glk_set_style( glui32 styl );
@@ -429,4 +429,5 @@ extern strid_t glk_stream_open_resource_uni( glui32 filenum, glui32 rock );
 
 #endif /* GLK_MODULE_RESOURCE_STREAM */
 
+#include "cheapglk.h"
 #endif /* GLK_H */

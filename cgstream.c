@@ -1644,7 +1644,7 @@ void glk_put_string( char *s )
     gli_put_buffer( gli_currentstr, s, strlen( s ) );
 }
 
-void glk_put_string_stream( stream_t *str, char *s )
+void glk_put_string_stream( stream_t *str, const char *s )
 {
     if ( !str )
     {

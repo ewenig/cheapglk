@@ -5,7 +5,7 @@
 #include "glk.h"
 #include "iffy.h"
 
-// glui8 iffy_state_init( iffy_state_t *target );
 glui8 iffy_state_init( void );
+iffy_user *iffy_user_get( GSList *target );
 
 #endif

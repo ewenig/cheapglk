@@ -3,6 +3,7 @@
 #include <string.h>
 #include "glk.h"
 #include "cheapglk.h"
+#include "iffy.h"
 
 static unsigned char char_tolower_table[256];
 static unsigned char char_toupper_table[256];
@@ -89,8 +90,7 @@ void glk_select( event_t *event )
 
     if ( win->char_request )
     {
-        char *res;
-        char buf[256];
+        char *buf;
         glui32 kval;
         int len;
 
@@ -100,12 +100,14 @@ void glk_select( event_t *event )
             be turned into a special keycode (and so would other keys,
             if we could recognize them.) */
 
-        res = fgets( buf, 255, stdin );
-        if ( !res )
+        while ( state->input->next == NULL )
         {
-            printf( "\n<end of input>\n" );
-            glk_exit( );
+            iffy_loop_tick( );
         }
+
+        buf = strdup( state->input->next );
+        free( state->input->next );
+        state->input->next = NULL;
 
         if ( !gli_utf8input )
         {
@@ -121,6 +123,8 @@ void glk_select( event_t *event )
             if ( !len )
                 kval = '\n';
         }
+
+        free( buf );
 
         if ( kval == '\r' || kval == '\n' )
         {
@@ -140,17 +144,18 @@ void glk_select( event_t *event )
     else
     {
         /* line_request */
-        char *res;
-        char buf[256];
+        char *buf;
         int val;
         glui32 ix;
 
-        res = fgets( buf, 255, stdin );
-        if ( !res )
+        while ( state->input->next == NULL )
         {
-            printf( "\n<end of input>\n" );
-            glk_exit( );
+            iffy_loop_tick( );
         }
+
+        buf = strdup( state->input->next );
+        free( state->input->next );
+        state->input->next = NULL;
 
         val = strlen( buf );
         if ( val && ( buf[val - 1] == '\n' || buf[val - 1] == '\r' ) )
@@ -196,6 +201,8 @@ void glk_select( event_t *event )
                     destbuf[ix] = ubuf[ix];
             }
         }
+
+        free( buf );
 
         if ( !win->line_request_uni )
         {

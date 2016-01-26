@@ -88,8 +88,29 @@ void iffy_callback_umode( irc_session_t *session, const char *event, const char 
 
 void iffy_callback_channel( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
 {
-    // stub function
-    return;
+    // dummy object to help us find the user entry
+    iffy_user searchUser = { (char *)origin, 0 };
+    GSList *targetUser = g_slist_find_custom( state->users, &searchUser, iffy_users_cmp );
+
+    if ( targetUser == NULL )
+    {
+        // this shouldn't happen
+        iffy_warn( "Received channel event for untracked user" );
+        return;
+    }
+
+    if ( params[1] != NULL && ( *params[1] == '>' || *params[1] == '!' ) )
+    {
+        // iffy will ignore any input from a user who doesn't have ops, they're cold like that.
+        if ( ( iffy_user_get( targetUser ) )->hasOps )
+        {
+            // trigger appropriate callbacks
+            iffy_input_handle( params[1], ">", iffy_input_game_cmd );
+            iffy_input_handle( params[1], "!help", iffy_input_help );
+            iffy_input_handle( params[1], "!loadgame", iffy_input_load );
+            iffy_input_handle( params[1], "!listgames", iffy_input_list );
+        }
+    }
 }
 
 void iffy_callback_privmsg( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
@@ -112,8 +133,7 @@ void iffy_callback_nick( irc_session_t *session, const char *event, const char *
     }
 
     // update the user entry
-    ( (iffy_user *)g_slist_nth_data( state->users, g_slist_position( state->users, targetUser ) ) )->nick =
-    (char *)params[0];
+    ( iffy_user_get( targetUser ) )->nick = (char *)params[0];
 }
 
 void iffy_callback_numeric( irc_session_t *session, unsigned int event, const char *origin, const char **params, unsigned int count )
@@ -164,14 +184,19 @@ void iffy_callback_numeric( irc_session_t *session, unsigned int event, const ch
     return;
 }
 
+// modified from BSD strcmp() implementation
 gint iffy_users_cmp( gconstpointer a, gconstpointer b )
 {
-    if ( strcmp( ( (iffy_user *)a )->nick, ( (iffy_user *)b )->nick ) == 0 )
+    char *s1 = ( (iffy_user *)a )->nick, *s2 = ( (iffy_user *)b )->nick;
+    while ( *s1++ == *s2++ )
+    {
+        // nop
+    }
+
+    if ( *s1 == 0 )
     {
         return 0;
     }
-    else
-    {
-        return 1;
-    }
+
+    return ( *(const unsigned char *)s1 - *(const unsigned char *)( s2 - 1 ) );
 }

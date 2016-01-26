@@ -2,6 +2,7 @@
 #define IFFY_H
 
 #include <glib.h>
+#include "libircclient.h"
 #include "glk.h"
 
 #define malloc( N ) calloc( 1, N )
@@ -45,9 +46,25 @@ typedef struct
 
 typedef struct
 {
+    char **list;
+    char *current;
+} iffy_state_games_t;
+
+typedef struct
+{
+    char *next;
+} iffy_state_input_t;
+
+typedef struct
+{
     iffy_state_files_t *files;
     iffy_state_options_t *opts;
+    iffy_state_games_t *games;
+    iffy_state_input_t *input;
+
+    irc_session_t *session;
     GSList *users;
+
     gboolean acceptingRplNamreply;
 } iffy_state_t;
 
@@ -56,5 +73,7 @@ iffy_state_t *state;
 #include "iffy_callbacks.h"
 #include "iffy_state.h"
 #include "iffy_config.h"
+#include "iffy_input.h"
+#include "iffy_loop.h"
 
 #endif

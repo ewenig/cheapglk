@@ -1,6 +1,8 @@
 #ifndef CHEAPGLK_H
 #define CHEAPGLK_H
 
+#include <stdio.h>
+
 /* cheapglk.h: Private header file for Cheapass Implementation of the
         Glk API.
     CheapGlk Library: version 1.0.4.

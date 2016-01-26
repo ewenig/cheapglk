@@ -5,6 +5,7 @@
 #include <sys/stat.h> /* for stat() */
 #include "glk.h"
 #include "cheapglk.h"
+#include "iffy.h"
 
 /* This file implements filerefs as they work in a stdio system: a
     fileref contains a pathname, a text/binary flag, and a file
@@ -236,6 +237,13 @@ frefid_t glk_fileref_create_by_prompt( glui32 usage, glui32 fmode, glui32 rock )
 
     printf( "%s %s: ", prompt, prompt2 );
 
+    while ( state->games->current == NULL )
+    {
+        iffy_loop_tick( );
+    }
+
+    strncpy( buf, state->games->current, BUFLEN );
+    free( state->games->current );
     res = fgets( buf, BUFLEN - 1, stdin );
     if ( !res )
     {
