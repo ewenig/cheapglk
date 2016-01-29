@@ -7,6 +7,7 @@
 
 glui8 iffy_callbacks_init( irc_callbacks_t **target, iffy_state_options_t *options );
 void iffy_callback_connect( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count );
+void iffy_callback_join( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count );
 void iffy_callback_quitpart( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count );
 void iffy_callback_umode( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count );
 void iffy_callback_channel( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count );

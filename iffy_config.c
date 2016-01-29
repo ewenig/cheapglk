@@ -66,34 +66,39 @@ glui8 iffy_config_parse( iffy_state_options_t *target, GKeyFile *handle )
     memset( target, 0, sizeof( &target ) );
 
     // load in options
-    target->server = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Server", &error );
+    target->server = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "Server", &error );
     if ( iffy_config_check_err( target->server, error ) )
     {
         return 1;
     }
-    target->port = (uint16_t)g_key_file_get_integer( handle, IFFY_GROUP_NAME, "Port", &error );
+    target->port = (uint16_t)g_key_file_get_integer( handle, IFFY_IRC_CONFIG, "Port", &error );
     if ( iffy_config_check_err( &( target->port ), error ) )
     {
         return 1;
     }
-    target->nick = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Nick", &error );
+    target->nick = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "Nick", &error );
     if ( iffy_config_check_err( target->nick, error ) )
     {
         return 1;
     }
-    target->username = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Username", &error );
+    target->username = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "Username", &error );
     if ( iffy_config_check_err( target->username, error ) )
     {
         return 1;
     }
-    target->pass = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Password", &error );
+    target->pass = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "Password", &error );
     error = NULL;
-    target->channel = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "Channel", &error );
+    target->channel = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "Channel", &error );
     if ( iffy_config_check_err( target->channel, error ) )
     {
         return 1;
     }
-    target->realName = (char *)g_key_file_get_string( handle, IFFY_GROUP_NAME, "RealName", &error );
+    target->realName = (char *)g_key_file_get_string( handle, IFFY_IRC_CONFIG, "RealName", &error );
+    if ( iffy_config_check_err( target->realName, error ) )
+    {
+        return 1;
+    }
+    target->gamesFolder = (char *)g_key_file_get_string( handle, IFFY_FILES_CONFIG, "GamesFolder", &error );
     if ( iffy_config_check_err( target->realName, error ) )
     {
         return 1;

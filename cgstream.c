@@ -4,6 +4,7 @@
 #include "glk.h"
 #include "cheapglk.h"
 #include "gi_blorb.h"
+#include "iffy.h"
 
 /* This implements pretty much what any Glk implementation needs for
     stream stuff. Memory streams, file streams (using stdio functions),
@@ -678,7 +679,7 @@ static void gli_put_char( stream_t *str, unsigned char ch )
             character set, this is (a) place to do it. Only on the
             putc(); not on the gli_put_char to echostr. */
         if ( !gli_utf8output )
-            putc( ch, stdout );
+            iffy_buf_push_char( ch );
         else
             gli_putchar_utf8( ch, stdout );
         if ( str->win->echostr )
@@ -758,7 +759,7 @@ static void gli_put_char_uni( stream_t *str, glui32 ch )
             character set, this is (a) place to do it. Only on the
             putc(); not on the gli_put_char to echostr. */
         if ( !gli_utf8output )
-            putc( ( ch & 0xFF ), stdout );
+            iffy_buf_push_char( ( ch & 0xFF ) );
         else
             gli_putchar_utf8( ch, stdout );
         if ( str->win->echostr )
@@ -874,7 +875,7 @@ static void gli_put_buffer( stream_t *str, char *buf, glui32 len )
             fwrite(); not on the gli_put_buffer to echostr. */
         if ( !gli_utf8output )
         {
-            fwrite( (unsigned char *)buf, 1, len, stdout );
+            irc_cmd_msg( state->session, state->opts->channel, (unsigned char *)buf );
         }
         else
         {
@@ -1651,7 +1652,7 @@ void glk_put_string_stream( stream_t *str, const char *s )
         gli_strict_warning( "put_string_stream: invalid ref" );
         return;
     }
-    gli_put_buffer( str, s, strlen( s ) );
+    gli_put_buffer( str, (char *)s, strlen( s ) );
 }
 
 void glk_put_buffer( char *buf, glui32 len )

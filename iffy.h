@@ -1,6 +1,8 @@
 #ifndef IFFY_H
 #define IFFY_H
 
+#include <sys/types.h>
+#include <dirent.h>
 #include <glib.h>
 #include "libircclient.h"
 #include "glk.h"
@@ -11,7 +13,9 @@
 #define iffy_warn( N ) fputs( "WARNING: " N "\n", stderr )
 #define iffy_warnf( N, M ) fprintf( stderr, "WARNING: " N "\n", M )
 
-#define IFFY_GROUP_NAME "iffy"
+#define IFFY_IRC_CONFIG "irc"
+#define IFFY_FILES_CONFIG "folders"
+#define IFFY_ADMIN_CONFIG "admin"
 
 typedef struct
 {
@@ -28,6 +32,7 @@ typedef struct
     char *pass;
     char *channel;
     char *realName;
+    char *gamesFolder;
 } iffy_state_options_t;
 
 typedef struct
@@ -46,7 +51,7 @@ typedef struct
 
 typedef struct
 {
-    char **list;
+    GSList *list;
     char *current;
 } iffy_state_games_t;
 
@@ -66,6 +71,9 @@ typedef struct
     GSList *users;
 
     gboolean acceptingRplNamreply;
+    gboolean inGame;
+
+    char *sendBuf;
 } iffy_state_t;
 
 iffy_state_t *state;

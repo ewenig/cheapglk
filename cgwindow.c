@@ -3,7 +3,7 @@
 #include "glk.h"
 #include "cheapglk.h"
 
-/* Since we're not using any kind of cursor movement or terminal
+/* Since we're not using any kind of cursor movement or terminal 
     emulation, we're dreadfully limited in what kind of windows we
     support. In fact, we can only support one window at a time,
     and that must be a wintype_TextBuffer. Printing to this window
@@ -12,8 +12,9 @@
     the output is in glk_put_char() etc.) */
 
 static window_t *mainwin = NULL;
+static window_t *statuswin = NULL;
 
-window_t *gli_new_window( glui32 rock )
+window_t *gli_new_window( glui32 rock, int wintype )
 {
     window_t *win = (window_t *)malloc( sizeof( window_t ) );
     if ( !win )
@@ -22,7 +23,18 @@ window_t *gli_new_window( glui32 rock )
     win->magicnum = MAGIC_WINDOW_NUM;
     win->rock = rock;
 
-    win->str = gli_new_stream( strtype_Window, FALSE, TRUE, 0 );
+    if ( wintype == MAIN_WIN )
+    {
+        win->str = gli_new_stream( strtype_Window, FALSE, TRUE, 0 );
+    }
+    else if ( wintype == STATUS_WIN )
+    {
+        win->str = gli_new_stream( strtype_Buffer, FALSE, TRUE, 0 );
+        win->str->buffer = (char *)calloc( sizeof( char ), STATUS_BUFFER_LEN );
+        if ( !win->str->buffer )
+            return NULL;
+    }
+
     win->str->win = win;
     win->echostr = NULL;
 
@@ -47,7 +59,8 @@ void gli_delete_window( window_t *win )
     {
         if ( gli_unregister_arr )
         {
-            ( *gli_unregister_arr )( win->linebuf, win->linebuflen, "&+#!Cn", win->inarrayrock );
+            ( *gli_unregister_arr )( win->linebuf, win->linebuflen, "&+#!Cn",
+                                     win->inarrayrock );
         }
         win->linebuf = NULL;
     }
@@ -77,21 +90,26 @@ winid_t glk_window_open( winid_t split, glui32 method, glui32 size, glui32 winty
 
     if ( mainwin || split )
     {
-        /* This cheap library only allows you to open a window if there
-            aren't any other windows. But it's legal for the program to
-            ask for multiple windows. So we don't print a warning; we just
-            return NULL. */
-        return NULL;
+        // Nah, its cool tho
+        win = gli_new_window( rock, STATUS_WIN );
+        if ( !win )
+        {
+            gli_strict_warning( "window_open: unable to create window." );
+            return NULL;
+        }
+
+        statuswin = win;
+        return statuswin;
     }
 
     if ( wintype != wintype_TextBuffer )
     {
-        /* This cheap library only allows you to open text buffer windows.
+        /* This cheap library only allows you to open text buffer windows. 
             Again, don't print a warning. */
         return NULL;
     }
 
-    win = gli_new_window( rock );
+    win = gli_new_window( rock, MAIN_WIN );
     if ( !win )
     {
         gli_strict_warning( "window_open: unable to create window." );
@@ -136,7 +154,7 @@ winid_t glk_window_iterate( window_t *win, glui32 *rockptr )
 
     if ( !win )
     {
-        /* They're asking for the first window. Return the main window
+        /* They're asking for the first window. Return the main window 
             if it exists, or 0 if there is none. */
         if ( !mainwin )
         {
@@ -190,10 +208,10 @@ winid_t glk_window_get_parent( window_t *win )
     if ( !win || win != mainwin )
     {
         gli_strict_warning( "window_get_parent: invalid id." );
-        return NULL;
+        return mainwin;
     }
 
-    return NULL;
+    return mainwin;
 }
 
 winid_t glk_window_get_sibling( window_t *win )
@@ -211,13 +229,12 @@ strid_t glk_window_get_stream( window_t *win )
 {
     stream_t *str;
 
-    if ( !win || win != mainwin )
-    {
-        gli_strict_warning( "window_get_stream: invalid id." );
+    /* if (!win || win != mainwin) {
+        gli_strict_warning("window_get_stream: invalid id.");
         return NULL;
-    }
+    } */
 
-    str = mainwin->str;
+    str = win->str;
 
     return str;
 }
@@ -403,7 +420,8 @@ void glk_cancel_line_event( window_t *win, event_t *ev )
         {
             /* This could be a char array or a glui32 array. */
             char *typedesc = ( mainwin->line_request_uni ? "&+#!Iu" : "&+#!Cn" );
-            ( *gli_unregister_arr )( mainwin->linebuf, mainwin->linebuflen, typedesc, mainwin->inarrayrock );
+            ( *gli_unregister_arr )( mainwin->linebuf, mainwin->linebuflen,
+                                     typedesc, mainwin->inarrayrock );
         }
 
         mainwin->line_request = FALSE;
@@ -465,16 +483,15 @@ void glk_window_move_cursor( window_t *win, glui32 xpos, glui32 ypos )
         return;
     }
 
-    gli_strict_warning( "window_move_cursor: cannot move cursor in a TextBuffer window." );
+    //gli_strict_warning("window_move_cursor: cannot move cursor in a TextBuffer window.");
 }
 
 void glk_window_get_size( window_t *win, glui32 *widthptr, glui32 *heightptr )
 {
-    if ( !win || win != mainwin )
-    {
-        gli_strict_warning( "window_get_size: invalid id." );
+    /* if (!win || win != mainwin) {
+        gli_strict_warning("window_get_size: invalid id.");
         return;
-    }
+    } */
 
     if ( widthptr )
         *widthptr = gli_screenwidth;
@@ -504,6 +521,16 @@ void glk_window_set_arrangement( window_t *win, glui32 method, glui32 size, wini
     gli_strict_warning( "window_set_arrangement: not a Pair window." );
 }
 
+extern const char *glk_get_status_text( )
+{
+    if ( statuswin == NULL || statuswin->str->buffer == NULL )
+    {
+        return "Status text not available.";
+    }
+
+    return statuswin->str->buffer;
+}
+
 #ifdef GLK_MODULE_IMAGE
 
 glui32 glk_image_draw( winid_t win, glui32 image, glsi32 val1, glsi32 val2 )
@@ -529,7 +556,11 @@ void glk_window_flow_break( winid_t win )
     gli_strict_warning( "window_flow_break: graphics not supported." );
 }
 
-void glk_window_erase_rect( winid_t win, glsi32 left, glsi32 top, glui32 width, glui32 height )
+void glk_window_erase_rect( winid_t win,
+                            glsi32 left,
+                            glsi32 top,
+                            glui32 width,
+                            glui32 height )
 {
     gli_strict_warning( "window_erase_rect: graphics not supported." );
 }

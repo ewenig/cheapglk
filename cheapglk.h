@@ -57,6 +57,10 @@ typedef struct glk_fileref_struct fileref_t;
 #define MAGIC_STREAM_NUM ( 8769 )
 #define MAGIC_FILEREF_NUM ( 7698 )
 
+#define MAIN_WIN ( 0 )
+#define STATUS_WIN ( 1 )
+#define STATUS_BUFFER_LEN ( 512 )
+
 struct glk_window_struct
 {
     glui32 magicnum;
@@ -80,6 +84,7 @@ struct glk_window_struct
 #define strtype_Window ( 2 )
 #define strtype_Memory ( 3 )
 #define strtype_Resource ( 4 )
+#define strtype_Buffer ( 5 )
 
 struct glk_stream_struct
 {
@@ -94,6 +99,9 @@ struct glk_stream_struct
 
     /* for strtype_Window */
     window_t *win;
+
+    /* for strtype_Buffer */
+    char *buffer;
 
     /* for strtype_File */
     FILE *file;
@@ -148,7 +156,7 @@ typedef glui32 gli_decomp_block_t[2]; /* count, position */
 
 extern void gli_initialize_misc( void );
 
-extern window_t *gli_new_window( glui32 rock );
+extern window_t *gli_new_window( glui32 rock, int wintype );
 extern void gli_delete_window( window_t *win );
 extern window_t *gli_window_get( void );
 

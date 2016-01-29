@@ -67,7 +67,8 @@ int main( int argc, char *argv[] )
         return 1;
     }
 
-    // Set up libircclient session options XXX
+    // Set up libircclient session options
+    irc_option_set( state->session, LIBIRC_OPTION_STRIPNICKS );
 
     // Connect to the IRC server.
     res = irc_connect( state->session, state->opts->server, state->opts->port, 0, state->opts->nick,
@@ -80,13 +81,9 @@ int main( int argc, char *argv[] )
 
     // Initialize some internal data structures.
     gli_initialize_misc( );
+    iffy_games_refresh( );
 
-
-    // Call the event loop.
-    // XXX Actually call glk_main, and stick the handrolled event loop (iffy_loop_tick) in idle points.
-    // irc_run( state->session );
-
-    // Call the GLK process.
+    // start the host program
     glk_main( );
     glk_exit( );
 

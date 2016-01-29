@@ -6,31 +6,63 @@
 
 void gli_putchar_utf8( glui32 val, FILE *fl )
 {
-    if ( val < 0x80 )
+    if ( fl == stdout )
     {
-        putc( val, fl );
-    }
-    else if ( val < 0x800 )
-    {
-        putc( ( 0xC0 | ( ( val & 0x7C0 ) >> 6 ) ), fl );
-        putc( ( 0x80 | ( val & 0x03F ) ), fl );
-    }
-    else if ( val < 0x10000 )
-    {
-        putc( ( 0xE0 | ( ( val & 0xF000 ) >> 12 ) ), fl );
-        putc( ( 0x80 | ( ( val & 0x0FC0 ) >> 6 ) ), fl );
-        putc( ( 0x80 | ( val & 0x003F ) ), fl );
-    }
-    else if ( val < 0x200000 )
-    {
-        putc( ( 0xF0 | ( ( val & 0x1C0000 ) >> 18 ) ), fl );
-        putc( ( 0x80 | ( ( val & 0x03F000 ) >> 12 ) ), fl );
-        putc( ( 0x80 | ( ( val & 0x000FC0 ) >> 6 ) ), fl );
-        putc( ( 0x80 | ( val & 0x00003F ) ), fl );
+        if ( val < 0x80 )
+        {
+            iffy_buf_push_char( val );
+        }
+        else if ( val < 0x800 )
+        {
+            iffy_buf_push_char( ( 0xC0 | ( ( val & 0x7C0 ) >> 6 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( val & 0x03F ) ) );
+        }
+        else if ( val < 0x10000 )
+        {
+            iffy_buf_push_char( ( 0xE0 | ( ( val & 0xF000 ) >> 12 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( ( val & 0x0FC0 ) >> 6 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( val & 0x003F ) ) );
+        }
+        else if ( val < 0x200000 )
+        {
+            iffy_buf_push_char( ( 0xF0 | ( ( val & 0x1C0000 ) >> 18 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( ( val & 0x03F000 ) >> 12 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( ( val & 0x000FC0 ) >> 6 ) ) );
+            iffy_buf_push_char( ( 0x80 | ( val & 0x00003F ) ) );
+        }
+        else
+        {
+            iffy_buf_push_char( '?' );
+        }
     }
     else
     {
-        putc( '?', fl );
+        if ( val < 0x80 )
+        {
+            putc( val, fl );
+        }
+        else if ( val < 0x800 )
+        {
+            putc( ( 0xC0 | ( ( val & 0x7C0 ) >> 6 ) ), fl );
+            putc( ( 0x80 | ( val & 0x03F ) ), fl );
+        }
+        else if ( val < 0x10000 )
+        {
+            putc( ( 0xE0 | ( ( val & 0xF000 ) >> 12 ) ), fl );
+            putc( ( 0x80 | ( ( val & 0x0FC0 ) >> 6 ) ), fl );
+            putc( ( 0x80 | ( val & 0x003F ) ), fl );
+        }
+        else if ( val < 0x200000 )
+        {
+            putc( ( 0xF0 | ( ( val & 0x1C0000 ) >> 18 ) ), fl );
+            putc( ( 0x80 | ( ( val & 0x03F000 ) >> 12 ) ), fl );
+            putc( ( 0x80 | ( ( val & 0x000FC0 ) >> 6 ) ), fl );
+            putc( ( 0x80 | ( val & 0x00003F ) ), fl );
+        }
+        else
+        {
+            putc( '?', fl );
+        }
     }
 }
 

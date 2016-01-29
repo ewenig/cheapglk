@@ -242,14 +242,9 @@ frefid_t glk_fileref_create_by_prompt( glui32 usage, glui32 fmode, glui32 rock )
         iffy_loop_tick( );
     }
 
-    strncpy( buf, state->games->current, BUFLEN );
-    free( state->games->current );
-    res = fgets( buf, BUFLEN - 1, stdin );
-    if ( !res )
-    {
-        printf( "\n<end of input>\n" );
-        glk_exit( );
-    }
+    // XXX length management
+    strcpy( buf, state->opts->gamesFolder );
+    strcat( buf, state->games->current );
 
     /* Trim whitespace from end and beginning. */
 

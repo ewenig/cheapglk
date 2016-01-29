@@ -7,5 +7,7 @@
 
 glui8 iffy_state_init( void );
 iffy_user *iffy_user_get( GSList *target );
+glui8 iffy_games_refresh( void );
+void iffy_buf_push_char( char c );
 
 #endif

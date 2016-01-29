@@ -15,6 +15,7 @@ glui8 iffy_callbacks_init( irc_callbacks_t **target, iffy_state_options_t *optio
     memset( *target, 0, sizeof( irc_callbacks_t ) );
     // set the callbacks
     ( *target )->event_connect = iffy_callback_connect;
+    ( *target )->event_join = iffy_callback_join;
     ( *target )->event_quit = iffy_callback_quitpart;
     ( *target )->event_part = iffy_callback_quitpart;
     ( *target )->event_umode = iffy_callback_umode;
@@ -61,6 +62,15 @@ void iffy_callback_connect( irc_session_t *session, const char *event, const cha
     // irc_cmd_names( session, state->opts->channel );
 
     return;
+}
+
+void iffy_callback_join( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
+{
+    iffy_user *newUser = malloc( sizeof( newUser ) ); // XXX
+    newUser->nick = origin;
+    newUser->hasOps = 1; // XXX
+
+    state->users = g_slist_insert( state->users, newUser, -1 );
 }
 
 void iffy_callback_quitpart( irc_session_t *session, const char *event, const char *origin, const char **params, unsigned int count )
@@ -184,19 +194,14 @@ void iffy_callback_numeric( irc_session_t *session, unsigned int event, const ch
     return;
 }
 
-// modified from BSD strcmp() implementation
 gint iffy_users_cmp( gconstpointer a, gconstpointer b )
 {
-    char *s1 = ( (iffy_user *)a )->nick, *s2 = ( (iffy_user *)b )->nick;
-    while ( *s1++ == *s2++ )
-    {
-        // nop
-    }
-
-    if ( *s1 == 0 )
+    if ( strcmp( ( (iffy_user *)a )->nick, ( (iffy_user *)b )->nick ) == 0 )
     {
         return 0;
     }
-
-    return ( *(const unsigned char *)s1 - *(const unsigned char *)( s2 - 1 ) );
+    else
+    {
+        return 1;
+    }
 }
